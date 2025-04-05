@@ -2,10 +2,10 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, ContextTypes, filters
 from PIL import Image, ImageDraw, ImageFont
 
-# ✅ التوكن الخاص ببوتك
+# ✅ التوكن الخاص بك
 TOKEN = "7666664099:AAHRukdO-aNygOR6UlMO2DbbqKQvTeYLo0Y"
 
-# ✅ تعريف منطقة النص داخل القالب
+# ✅ إعدادات منطقة النص داخل القالب
 TEXT_AREA = {
     "x": 100,
     "y": 300,
@@ -13,22 +13,19 @@ TEXT_AREA = {
     "height": 200
 }
 
-# ✅ إعداد الخط
 FONT_PATH = "Cairo-Bold.ttf"
 FONT_SIZE = 36
 TEXT_COLOR = (60, 60, 60)
 
-# ✅ دالة لتقسيم النص الطويل لعدة أسطر
+# ✅ دالة تقسيم النص إلى أسطر تناسب عرض معين
 def wrap_text(text, draw, font, max_width):
-    lines = []
     words = text.split()
+    lines = []
     current_line = ""
 
     for word in words:
         test_line = f"{current_line} {word}".strip()
-        bbox = draw.textbbox((0, 0), test_line, font=font)
-        width = bbox[2] - bbox[0]
-
+        width = draw.textlength(test_line, font=font)
         if width <= max_width:
             current_line = test_line
         else:
@@ -40,11 +37,11 @@ def wrap_text(text, draw, font, max_width):
 
     return lines
 
-# ✅ دالة الرد على /start
+# ✅ /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("أرسل لي نصًا وسأعيد لك صورة بتصميم PL Plus")
 
-# ✅ دالة التعامل مع النصوص
+# ✅ عند استلام رسالة نصية
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
 
@@ -53,23 +50,22 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     font = ImageFont.truetype(FONT_PATH, FONT_SIZE)
 
     lines = wrap_text(user_text, draw, font, TEXT_AREA["width"])
-    total_text_height = sum([draw.textbbox((0, 0), line, font=font)[3] - draw.textbbox((0, 0), line, font=font)[1] for line in lines])
-    line_height = total_text_height / len(lines)
+    line_height = font.getbbox("Ay")[3] + 10  # ارتفاع السطر + تباعد بسيط
+    total_text_height = len(lines) * line_height
 
-    # حساب البداية لتوسيط النص عموديًا
-    y = TEXT_AREA["y"] + (TEXT_AREA["height"] - total_text_height) / 2
+    # التوسيط العمودي داخل المنطقة
+    y_start = TEXT_AREA["y"] + (TEXT_AREA["height"] - total_text_height) / 2
 
     for line in lines:
-        bbox = draw.textbbox((0, 0), line, font=font)
-        text_width = bbox[2] - bbox[0]
+        text_width = draw.textlength(line, font=font)
         x = TEXT_AREA["x"] + (TEXT_AREA["width"] - text_width) / 2
-        draw.text((x, y), line, fill=TEXT_COLOR, font=font)
-        y += line_height
+        draw.text((x, y_start), line, fill=TEXT_COLOR, font=font)
+        y_start += line_height
 
     img.save("output.png")
     await update.message.reply_photo(photo=open("output.png", 'rb'))
 
-# ✅ إعداد البوت وتشغيله
+# ✅ تشغيل البوت
 app = ApplicationBuilder().token(TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
