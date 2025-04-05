@@ -1,5 +1,5 @@
+--upgrade pip setuptools wheel
 python-telegram-bot==20.3
 Pillow==9.5.0
 arabic-reshaper==2.1.4
 python-bidi==0.4.2
-setuptools==65.5.0
