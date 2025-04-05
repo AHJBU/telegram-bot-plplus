@@ -15,8 +15,8 @@ TEXT_AREA = {
 }
 
 FONT_PATH = "Cairo-Bold.ttf"  # تأكد من وجود الملف في نفس المجلد
-FONT_SIZE = 36
-TEXT_COLOR = (60, 60, 60)  # لون النص (رمادي غامق)
+DEFAULT_FONT_SIZE = 36        # تغيير الاسم لتجنب التعارض
+TEXT_COLOR = (60, 60, 60)    # لون النص (رمادي غامق)
 BACKGROUND_COLOR = (255, 255, 255)  # لون خلفية النص (أبيض)
 
 # ✅ دالة تقسيم النص إلى أسطر تناسب عرض معين (محسنة)
@@ -52,8 +52,11 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         img = Image.open("template.png")
         draw = ImageDraw.Draw(img)
         
+        # استخدام متغير محلي لحجم الخط بدلاً من العام
+        current_font_size = DEFAULT_FONT_SIZE
+        
         # تحميل الخط مع حجم أكبر أولاً لتحسين الدقة
-        font = ImageFont.truetype(FONT_PATH, FONT_SIZE * 2)
+        font = ImageFont.truetype(FONT_PATH, current_font_size * 2)
         
         # تقسيم النص مع مراعاة عرض المربع
         lines = wrap_text(user_text, font, TEXT_AREA["width"])
@@ -67,9 +70,9 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         total_text_height = len(lines) * line_height
         
         # إذا كان النص أطول من ارتفاع المربع، نضبط حجم الخط
-        while total_text_height > TEXT_AREA["height"] and FONT_SIZE > 10:
-            FONT_SIZE -= 2
-            font = ImageFont.truetype(FONT_PATH, FONT_SIZE * 2)
+        while total_text_height > TEXT_AREA["height"] and current_font_size > 10:
+            current_font_size -= 2
+            font = ImageFont.truetype(FONT_PATH, current_font_size * 2)
             lines = wrap_text(user_text, font, TEXT_AREA["width"])
             test_bbox = font.getbbox("ص")
             line_height = test_bbox[3] - test_bbox[1]
